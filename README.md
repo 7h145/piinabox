@@ -1,8 +1,6 @@
 # Pi in a Box
 
-This is about running the [pi coding agent](https://pi.dev/) ([GitHub](https://github.com/earendil-works/pi/tree/main/packages/coding-agent), [npm](https://www.npmjs.com/package/@earendil-works/pi-coding-agent)) in an isolated containerized environment.
-
-This is a sibling of [OpenCode in a Box](https://github.com/7h145/ocinabox), just barely different enough to justifiy it's own project as time of writing.  See [Opinions](#opinions) below if you want my rational why this exists.
+This is about running the [pi coding agent](https://pi.dev/) ([GitHub](https://github.com/earendil-works/pi/tree/main/packages/coding-agent), [npm](https://www.npmjs.com/package/@earendil-works/pi-coding-agent)) in an isolated containerized environment.  This is a sibling of [OpenCode in a Box](https://github.com/7h145/ocinabox), just barely different enough to justifiy it's own project as time of writing.  See [Opinions](#opinions) below if you want my rational why this exists.
 
 These days, coding and general-purpose AI agents do things on your computer. While I appreciate the help, I have serious trust issues with someone or something other than me having access to my system and, in turn, to my data.
 
@@ -22,7 +20,7 @@ This project comes in two parts: the container with `pi` and some tooling inside
 
 ### The Pi container
 
-A [Containerfile](Containerfile) and a small [build script](build.sh) build a [Debian trixie](https://www.debian.org/releases/trixie/) based [Node.js](https://nodejs.org/) runtime environment with the [pi-coding-agent npm package](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) and a somewhat sane set of pre-installed tools for the agent pre-installed (but YMMV).
+A [Containerfile](Containerfile) and a small [build script](build.sh) build a [Debian trixie](https://www.debian.org/releases/trixie/) based [Node.js](https://nodejs.org/) runtime environment with the [pi-coding-agent npm package](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) and a somewhat sane set of tools for the agent pre-installed (but YMMV).
 
 You can easily adjust the tooling in the container image for your needs (by editing the Containerfile and running `build.sh` again) or even let the agent itself install new tools at runtime (but be aware that the containers are not persistent by default).
 

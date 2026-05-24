@@ -81,7 +81,7 @@ ARG PAYLOADVERSION
 ARG PI_CODING_AGENT_DIR="/root/.config/pi/agent"
 ENV PI_CODING_AGENT_DIR=${PI_CODING_AGENT_DIR}
 
-# data in $XDG_DATA_HOME/pi/agent
+# sessions in $XDG_DATA_HOME/pi/agent/sessions
 ARG PI_CODING_AGENT_SESSION_DIR="/root/.local/share/pi/agent/sessions"
 ENV PI_CODING_AGENT_SESSION_DIR=${PI_CODING_AGENT_SESSION_DIR}
 
