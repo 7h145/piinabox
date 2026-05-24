@@ -54,34 +54,30 @@ declare -A C=(
   # The default name prefix is derived from the basename of this script.
   [name]="${IAM%.sh}"
 
-  # Use host pi coding agent configuration: if set to 'ro', 'rw', or 'O'
-  # and a host-side pi agent configuration directory exists, mount it
+  # Mount mode settings for Pi directories below:  Values 'ro', 'rw',
+  # and 'O' mean: if a suitable host-side directory exists, mount it
   # into the container with the selected `--volume` option.
-  # 'O' is podman's overlay mount mode: host files are visible and
-  # container writes succeed, but changes are discarded with the
-  # container.
-  # Note: 'O' is podman-specific; use 'ro' or 'rw' with docker.
-  # Any other value (like e.g. 'volume') uses isolated configuration in
-  # the $C[name]-config volume.
   #
-  # Default is 'rw', read/write mount the host configuration.
-  [use_pi_coding_agent_dir]='rw'
-
-  # Use host pi coding agent sessions: if set to 'ro', 'rw', or 'O' and
-  # a host-side pi agent session directory exists, mount it into the
-  # container with the selected `--volume` option.
-  # 'O' is podman's overlay mount mode: host files are visible and
-  # container writes succeed, but changes are discarded with the
-  # container.
-  # Note: 'O' is podman-specific; use 'ro' or 'rw' with docker.
-  # Any other value (like e.g. 'volume') uses isolated sessions in the
-  # $C[name]-sessions volume.
+  #  ro  read-only bind mount
+  #  rw  read/write bind mount
+  #  O   podman overlay mount: host files are visible, container writes
+  #      succeed, and changes are discarded with the container
   #
-  # Default is 'volume', store piinabox.sh sessions in a volume.
-  [use_pi_coding_agent_session_dir]='volume'
+  # Note: 'O' is podman-specific; use 'ro' or 'rw' with docker.
+  #
+  # Any other value means: do not bind-mount a host directory; use a
+  # dedicated container volume for that directory instead.
 
-  # Use host vim configuration: if 'true' and some vim configuration can
-  # be found on the host, mount it read-only into the container.
+  # Pi coding agent configuration directory.
+  # Default: 'rw', use existing host configuration read/write.
+  [mount_pi_coding_agent_dir]='rw'
+
+  # Pi coding agent session directory.
+  # Default: 'volume', keep sessions in a dedicated volume.
+  [mount_pi_coding_agent_session_dir]='volume'
+
+  # Host vim configuration (always 'ro', no volume fallback).
+  # Default: 'true', mount found vim configuration read-only.
   [use_vim_configuration]='true'
 )
 
@@ -100,7 +96,7 @@ declare -a PI_CODING_AGENT_DIR_CANDIDATES=(
 declare -a PI_CODING_AGENT_SESSION_DIR_CANDIDATES=(
   ${PI_CODING_AGENT_SESSION_DIR:+"${PI_CODING_AGENT_SESSION_DIR}"}
   "${XDG_DATA_HOME}/pi/agent/sessions"
-  "${HOME}/.pi/agent/sessions"
+  "${PI_CODING_AGENT_DIR_CANDIDATES[@]/%//sessions}"
 )
 
 vspec() {
@@ -210,7 +206,7 @@ declare -A VSPEC=(
   [container-dir]='/root/.config/pi/agent'
 )
 
-[[ "${C[use_pi_coding_agent_dir]}" =~ ^(ro|rw|O)$ ]] && {
+[[ "${C[mount_pi_coding_agent_dir]}" =~ ^(ro|rw|O)$ ]] && {
   HOSTPICONFIGDIR="$(
     first_existing_dir "${PI_CODING_AGENT_DIR_CANDIDATES[@]}")" && {
 
@@ -221,14 +217,14 @@ declare -A VSPEC=(
 
 PMARGS_VOLUMES+=( '--volume' "$(vspec VSPEC)" )
 
-# pi agent data: use a dedicated volume or mount an existing pi sessions
-# directory into the container
+# pi agent sessions: use a dedicated volume or mount an existing pi
+# sessions directory into the container
 declare -A VSPEC=(
   [source-volorpath]="${C[name]}-sessions"
   [container-dir]='/root/.local/share/pi/agent/sessions'
 )
 
-[[ "${C[use_pi_coding_agent_session_dir]}" =~ ^(ro|rw|O)$ ]] && {
+[[ "${C[mount_pi_coding_agent_session_dir]}" =~ ^(ro|rw|O)$ ]] && {
   HOSTPISESSIONDIR="$(
     first_existing_dir "${PI_CODING_AGENT_SESSION_DIR_CANDIDATES[@]}")" && {
 
