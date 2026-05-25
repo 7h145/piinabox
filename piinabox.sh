@@ -58,23 +58,34 @@ declare -A C=(
   # and 'O' mean: if a suitable host-side directory exists, mount it
   # into the container with the selected `--volume` option.
   #
-  #  ro  read-only bind mount
-  #  rw  read/write bind mount
-  #  O   podman overlay mount: host files are visible, container writes
-  #      succeed, and changes are discarded with the container
+  #  ro      read-only bind mount
+  #  rw      read/write bind mount
+  #  O       podman overlay mount: host files are visible, container
+  #          writes succeed, changes are discarded with the container
+  #
+  # Further values are
+  #
+  #  volume  read/write mount a dedicated volume for this container
+  #          directory (when applicable)
+  #  false   do not mount this volume or directory
   #
   # Note: 'O' is podman-specific; use 'ro' or 'rw' with docker.
-  #
-  # Any other value means: do not bind-mount a host directory; use a
-  # dedicated container volume for that directory instead.
 
   # Pi coding agent configuration directory.
-  # Default: 'rw', use existing host configuration read/write.
+  # Default: 'rw', mount an existing host pi configuration directory
+  # read/write into the container, if none exists, use 'volume'.
   [mount_pi_coding_agent_dir]='rw'
 
   # Pi coding agent session directory.
-  # Default: 'volume', keep sessions in a dedicated volume.
-  [mount_pi_coding_agent_session_dir]='volume'
+  # Default: 'rw', mount an existing host pi sessions directory
+  # read/write into the container, if none exists, use 'volume'.
+  [mount_pi_coding_agent_session_dir]='rw'
+
+  # Pi coding agent $XDG_DATA_HOME/pi/agent.  Idea: you may symlink from
+  # your configuration to keep unwieldy stuff in $XDG_DATA_HOME.
+  # Default: 'rw', mount an existing $XDG_DATA_HOME/pi/agent read/write
+  # into the container, no volume fallback.
+  [mount_xdg_data_home]='rw'
 
   # Host vim configuration (always 'ro', no volume fallback).
   # Default: 'true', mount found vim configuration read-only.
@@ -196,44 +207,74 @@ fi
 
 PMARGS_VOLUMES=(
   # static volumes, runtime data.  nothing for pi yet
-  #'--volume' "${C[name]}-root:/root"
+  #'--volume' "${C[name]}-something:/something"
 )
+
+# pi agent $XDG_DATA_HOME: mount an existing $XDG_DATA_HOME/pi/agent
+# directory into the container.
+if [[ -v C[mount_xdg_data_home] ]] &&
+  [[ ! "${C[mount_xdg_data_home]}" =~ ^(false|no|0)$ ]]; then
+
+  declare -A VSPEC=(
+    #[source-volorpath]="${C[name]}-xdgdata"
+    [container-dir]='/root/.local/share/pi/agent'
+  )
+
+  [[ "${C[mount_xdg_data_home]}" =~ ^(ro|rw|O)$ ]] && {
+    HOSTPIXDGDATADIR="$(
+      first_existing_dir "${XDG_DATA_HOME}/pi/agent")" && {
+
+      VSPEC[source-volorpath]="${HOSTPIXDGDATADIR}"
+      VSPEC[options]=":${BASH_REMATCH[0]}"
+
+      PMARGS_VOLUMES+=( '--volume' "$(vspec VSPEC)" )
+    }
+  }
+fi
 
 # pi agent configuration: use a dedicated volume or mount an existing pi
-# configuration directory into the container
-declare -A VSPEC=(
-  [source-volorpath]="${C[name]}-config"
-  [container-dir]='/root/.config/pi/agent'
-)
+# configuration directory into the container.
+if [[ -v C[mount_pi_coding_agent_dir] ]] &&
+  [[ ! "${C[mount_pi_coding_agent_dir]}" =~ ^(false|no|0)$ ]]; then
 
-[[ "${C[mount_pi_coding_agent_dir]}" =~ ^(ro|rw|O)$ ]] && {
-  HOSTPICONFIGDIR="$(
-    first_existing_dir "${PI_CODING_AGENT_DIR_CANDIDATES[@]}")" && {
+  declare -A VSPEC=(
+    [source-volorpath]="${C[name]}-config"
+    [container-dir]='/root/.config/pi/agent'
+  )
 
-    VSPEC[source-volorpath]="${HOSTPICONFIGDIR}"
-    VSPEC[options]=":${BASH_REMATCH[0]}"
+  [[ "${C[mount_pi_coding_agent_dir]}" =~ ^(ro|rw|O)$ ]] && {
+    HOSTPICONFIGDIR="$(
+      first_existing_dir "${PI_CODING_AGENT_DIR_CANDIDATES[@]}")" && {
+
+      VSPEC[source-volorpath]="${HOSTPICONFIGDIR}"
+      VSPEC[options]=":${BASH_REMATCH[0]}"
+    }
   }
-}
 
-PMARGS_VOLUMES+=( '--volume' "$(vspec VSPEC)" )
+  PMARGS_VOLUMES+=( '--volume' "$(vspec VSPEC)" )
+fi
 
 # pi agent sessions: use a dedicated volume or mount an existing pi
-# sessions directory into the container
-declare -A VSPEC=(
-  [source-volorpath]="${C[name]}-sessions"
-  [container-dir]='/root/.local/share/pi/agent/sessions'
-)
+# sessions directory into the container.
+if [[ -v C[mount_pi_coding_agent_session_dir] ]] &&
+  [[ ! "${C[mount_pi_coding_agent_session_dir]}" =~ ^(false|no|0)$ ]]; then
 
-[[ "${C[mount_pi_coding_agent_session_dir]}" =~ ^(ro|rw|O)$ ]] && {
-  HOSTPISESSIONDIR="$(
-    first_existing_dir "${PI_CODING_AGENT_SESSION_DIR_CANDIDATES[@]}")" && {
+  declare -A VSPEC=(
+    [source-volorpath]="${C[name]}-sessions"
+    [container-dir]='/root/.local/share/pi/agent/sessions'
+  )
 
-    VSPEC[source-volorpath]="${HOSTPISESSIONDIR}"
-    VSPEC[options]=":${BASH_REMATCH[0]}"
+  [[ "${C[mount_pi_coding_agent_session_dir]}" =~ ^(ro|rw|O)$ ]] && {
+    HOSTPISESSIONDIR="$(
+      first_existing_dir "${PI_CODING_AGENT_SESSION_DIR_CANDIDATES[@]}")" && {
+
+      VSPEC[source-volorpath]="${HOSTPISESSIONDIR}"
+      VSPEC[options]=":${BASH_REMATCH[0]}"
+    }
   }
-}
 
-PMARGS_VOLUMES+=( '--volume' "$(vspec VSPEC)" )
+  PMARGS_VOLUMES+=( '--volume' "$(vspec VSPEC)" )
+fi
 
 # vim configuration: if some vim configuration can be found, mount it
 # into the container

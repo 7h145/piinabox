@@ -1,6 +1,6 @@
 # Pi in a Box
 
-This is about running the [pi coding agent](https://pi.dev/) ([GitHub](https://github.com/earendil-works/pi/tree/main/packages/coding-agent), [npm](https://www.npmjs.com/package/@earendil-works/pi-coding-agent)) in an isolated containerized environment.  This is a sibling of [OpenCode in a Box](https://github.com/7h145/ocinabox), just barely different enough to justifiy it's own project as time of writing.  See [Opinions](#opinions) below if you want my rational why this exists.
+This is about running the [pi coding agent](https://pi.dev/) ([GitHub](https://github.com/earendil-works/pi/tree/main/packages/coding-agent), [npm](https://www.npmjs.com/package/@earendil-works/pi-coding-agent)) in an isolated containerized environment.  This is a sibling of [OpenCode in a Box](https://github.com/7h145/ocinabox), just barely different enough to justify it's own project as time of writing.  See [Opinions](#opinions) below if you want my rationale why this exists.
 
 These days, coding and general-purpose AI agents do things on your computer. While I appreciate the help, I have serious trust issues with someone or something other than me having access to my system and, in turn, to my data.
 
@@ -66,9 +66,22 @@ Further command line arguments are passed through to `pi` after the leading moun
 
     piinabox.sh .:ro run 'explain this codebase'
 
-## Notes
+## Usage notes
 
 One advertised use case of `pi` is its ability to modify itself by writing an extension into its configuration directory and then using `/reload` to load the new code.  A read-only host configuration is safest but breaks such use cases; the default is to mount read/write.
+
+### Recommended host configuration
+
+`piinabox.sh` looks for the host Pi agent configuration in `$PI_CODING_AGENT_DIR`, then `~/.config/pi/agent`, then `~/.pi/agent`.
+
+Pi stores user-installed packages below that configuration directory, in `npm/` and `git/`.  For a reasonable approximation of XDG-ish separation, keep configuration in `$XDG_CONFIG_HOME` and bulky package payloads in `$XDG_DATA_HOME` while preserving Pi's expected layout.  Use relative symlinks from your chosen configuration directory, like this:
+
+    mkdir -vp ~/.config/pi/agent
+    mkdir -vp ~/.local/share/pi/agent/packages/{npm,git}
+    ln -vs ../../../.local/share/pi/agent/packages/npm ~/.config/pi/agent/npm
+    ln -vs ../../../.local/share/pi/agent/packages/git ~/.config/pi/agent/git
+
+By default, `piinabox.sh` also bind-mounts an existing `~/.local/share/pi/agent`, so these symlinks resolve inside the container.
 
 ## The Container Runtime
 
