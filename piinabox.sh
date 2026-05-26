@@ -54,7 +54,7 @@ declare -A C=(
   # The default name prefix is derived from the basename of this script.
   [name]="${IAM%.sh}"
 
-  # Mount mode settings for Pi directories below:  Values 'ro', 'rw',
+  # Mount mode settings for host directories below:  Values 'ro', 'rw',
   # and 'O' mean: if a suitable host-side directory exists, mount it
   # into the container with the selected `--volume` option.
   #
@@ -285,7 +285,6 @@ fi
   if [[ -d "${HOME}/.vim" ]]; then
     PMARGS_VOLUMES+=( '--volume' "${HOME}/.vim:/root/.vim:ro" )
   else
-    XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-"${HOME}/.config"}"
     [[ -d "${XDG_CONFIG_HOME}/vim" ]] &&
       PMARGS_VOLUMES+=( '--volume' "${XDG_CONFIG_HOME}/vim:/root/.vim:ro" )
   fi
@@ -299,5 +298,5 @@ PMARGV=(
   ${PMARGS_PRJVOLUMES:+"${PMARGS_PRJVOLUMES[@]}"}
 )
 
-echo '# debug:' "${C[crt]}" run "${PMARGV[@]}" pi "${@}" >&2
+#echo '# debug:' "${C[crt]}" run "${PMARGV[@]}" pi "${@}" >&2
 "${C[crt]}" run "${PMARGV[@]}" pi "${@}"

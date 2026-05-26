@@ -74,7 +74,7 @@ One advertised use case of `pi` is its ability to modify itself by writing an ex
 
 `piinabox.sh` looks for the host Pi agent configuration in `$PI_CODING_AGENT_DIR`, then `~/.config/pi/agent`, then `~/.pi/agent`.
 
-Pi stores user-installed packages below that configuration directory, in `npm/` and `git/`.  For a reasonable approximation of XDG-ish separation, keep configuration in `$XDG_CONFIG_HOME` and bulky package payloads in `$XDG_DATA_HOME` while preserving Pi's expected layout.  Use relative symlinks from your chosen configuration directory, like this:
+Pi stores [https://pi.dev/docs/latest/packages](user-installed packages) below that configuration directory, in `npm/` and `git/`.  For a reasonable approximation of XDG-ish separation, keep configuration in `$XDG_CONFIG_HOME` and bulky package payloads in `$XDG_DATA_HOME` while preserving Pi's expected layout.  Use relative symlinks from your chosen configuration directory, like this:
 
     mkdir -vp ~/.config/pi/agent
     mkdir -vp ~/.local/share/pi/agent/packages/{npm,git}
