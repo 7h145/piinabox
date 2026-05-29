@@ -8,7 +8,7 @@ declare -A C=(
   #[crt]='docker'
 
   # Version of the Containerfile and build.sh script
-  [containerversion]='0.5'
+  [containerversion]='0.6'
 )
 
 command -v npm >&- || npm() {
