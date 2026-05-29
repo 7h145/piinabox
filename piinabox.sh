@@ -90,6 +90,10 @@ declare -A C=(
   # Host vim configuration (always 'ro', no volume fallback).
   # Default: 'true', mount found vim configuration read-only.
   [use_vim_configuration]='true'
+
+  # Host tmux configuration (always 'ro', no volume fallback).
+  # Default: 'true', mount found tmux configuration read-only.
+  [use_tmux_configuration]='true'
 )
 
 # XDG base directories reminder
@@ -288,6 +292,17 @@ fi
     [[ -d "${XDG_CONFIG_HOME}/vim" ]] &&
       PMARGS_VOLUMES+=( '--volume' "${XDG_CONFIG_HOME}/vim:/root/.vim:ro" )
   fi
+}
+
+# tmux configuration: if some tmux configuration can be found, mount it
+# into the container
+[[ "${C[use_tmux_configuration]}" = 'true' ]] && {
+  [[ -f "${HOME}/.tmux.conf" ]] &&
+    PMARGS_VOLUMES+=( '--volume' "${HOME}/.tmux.conf:/root/.tmux.conf:ro" )
+
+  [[ -d "${XDG_CONFIG_HOME}/tmux" ]] &&
+    PMARGS_VOLUMES+=( '--volume'
+      "${XDG_CONFIG_HOME}/tmux:/root/.config/tmux:ro" )
 }
 
 PMARGV=(

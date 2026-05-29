@@ -18,9 +18,11 @@ RUN true \
 # basic tooling
 RUN true \
   && apt-get install -y --no-install-recommends \
+    bat \
     curl \
     entr \
     fd-find \
+    file \
     fzf \
     gh \
     git \
@@ -41,9 +43,14 @@ RUN true \
     bind9-dnsutils \
     build-essential \
     git-lfs \
+    iputils-ping \
+    lsof \
     netcat-openbsd \
     openssh-client \
-    rsync
+    rsync \
+    socat \
+    strace \
+    tmux
 
 # interactive tooling
 RUN true \
@@ -63,6 +70,12 @@ RUN true \
 ENV PATH=${PATH}:/root/.local/bin
 RUN true \
   && pipx install uv
+
+# agents tend to have expectations
+RUN true \
+  && ln -sf /usr/bin/python3 /usr/local/bin/python \
+  && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
+  && ln -sf /usr/bin/batcat /usr/local/bin/bat
 
 RUN true \
   && apt-get -y remove --purge --auto-remove && apt-get -y clean \
