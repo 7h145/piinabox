@@ -14,6 +14,8 @@ This will spawn a containerized `pi` agent with just the specified files or dire
 
 Security note: This is a containerized setup, but not magic.  Anything you mount into the container is visible to code running there, and it uses the host network namespace (`--network=host`) by default.  Only mount what you actually want to share, use `:ro` where possible.
 
+This repository uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules).  Clone it using `git clone --recurse-submodules`.  If you already cloned the repository, initialize and/or update the submodules with `git submodule update --init --recursive`.
+
 ## Just a container and a `pi` stand-in script
 
 This project comes in two parts: the container with `pi` and some tooling inside, and a script for running the containerized `pi` executable with some of the host files or directories mounted inside the container for the agent to work with.
