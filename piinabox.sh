@@ -281,7 +281,7 @@ if [[ -v C[mount_pi_coding_agent_session_dir] ]] &&
 fi
 
 # vim configuration: if some vim configuration can be found, mount it
-# into the container
+# into the container.
 [[ "${C[use_vim_configuration]}" = 'true' ]] && {
   [[ -f "${HOME}/.vimrc" ]] &&
     PMARGS_VOLUMES+=( '--volume' "${HOME}/.vimrc:/root/.vimrc:ro" )
@@ -295,7 +295,7 @@ fi
 }
 
 # tmux configuration: if some tmux configuration can be found, mount it
-# into the container
+# into the container.
 [[ "${C[use_tmux_configuration]}" = 'true' ]] && {
   [[ -f "${HOME}/.tmux.conf" ]] &&
     PMARGS_VOLUMES+=( '--volume' "${HOME}/.tmux.conf:/root/.tmux.conf:ro" )
@@ -305,10 +305,17 @@ fi
       "${XDG_CONFIG_HOME}/tmux:/root/.config/tmux:ro" )
 }
 
+# pass PI_ environment variables trough into the container.
+declare -a PMARGS_PIENV; while read -r PIENV; do
+  [[ "${PIENV}" =~ ^PI_.*_DIR$ ]] && continue
+  PMARGS_PIENV+=( '--env' "${PIENV}" )
+done < <(compgen -e 'PI_')
+
 PMARGV=(
   '--name' "${C[name]}-${SRANDOM}"
   '--interactive' '--tty' '--rm'
   '--network=host'
+  ${PMARGS_PIENV:+"${PMARGS_PIENV[@]}"}
   ${PMARGS_VOLUMES:+"${PMARGS_VOLUMES[@]}"}
   ${PMARGS_PRJVOLUMES:+"${PMARGS_PRJVOLUMES[@]}"}
 )
