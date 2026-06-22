@@ -14,8 +14,6 @@ This will spawn a containerized `pi` agent with just the specified files or dire
 
 Security note: This is a containerized setup, but not magic.  Anything you mount into the container is visible to code running there, and it uses the host network namespace (`--network=host`) by default.  Only mount what you actually want to share, use `:ro` where possible.
 
-This repository uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules).  Clone it using `git clone --recurse-submodules`.  If you already cloned the repository, initialize and/or update the submodules with `git submodule update --init --recursive`.
-
 ## Just a container and a `pi` stand-in script
 
 This project comes in two parts: the container with `pi` and some tooling inside, and a script for running the containerized `pi` executable with some of the host files or directories mounted inside the container for the agent to work with.
@@ -84,6 +82,20 @@ Pi stores [user-installed packages](https://pi.dev/docs/latest/packages) below t
     ln -vs ../../../.local/share/pi/agent/packages/git ~/.config/pi/agent/git
 
 By default, `piinabox.sh` also bind-mounts an existing `~/.local/share/pi/agent`, so these symlinks resolve inside the container.
+
+### Recommended pi configuration
+
+It is helpful to tell the agent that it is running inside a container by
+[appending to its system prompt with an `APPEND_SYSTEM.md`
+file](https://pi.dev/docs/latest/usage#system-prompt-files).  Copy or
+adapt the [example `APPEND_SYSTEM.md` in the `contrib`
+directory](contrib/APPEND_SYSTEM.md) into your Pi agent configuration
+directory.
+
+The isolation of the containerized agent from the host system can hinder
+some legitimate workflows.  [I maintain a set of skills to alleviate
+these kinds of problems](https://github.com/7h145/boxed-skills), which
+might be useful directly or as examples.
 
 ## The Container Runtime
 
