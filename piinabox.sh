@@ -108,8 +108,11 @@ declare -a PI_CODING_AGENT_DIR_CANDIDATES=(
 )
 
 # list of plausible $PI_CODING_AGENT_SESSION_DIR-s in order of precedence
+mapfile -t LOCAL_SESSION_DIR_CANDIDATES < <(
+  compgen -G '.pi/sessions'; compgen -G '*/.pi/sessions')
 declare -a PI_CODING_AGENT_SESSION_DIR_CANDIDATES=(
   ${PI_CODING_AGENT_SESSION_DIR:+"${PI_CODING_AGENT_SESSION_DIR}"}
+  ${LOCAL_SESSION_DIR_CANDIDATES:+"${LOCAL_SESSION_DIR_CANDIDATES[0]}"}
   "${XDG_DATA_HOME}/pi/agent/sessions"
   "${PI_CODING_AGENT_DIR_CANDIDATES[@]/%//sessions}"
 )
