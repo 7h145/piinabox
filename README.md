@@ -127,10 +127,10 @@ safest but breaks such use cases; the default is to mount read/write.
 ### Session storage
 
 `piinabox.sh` will auto detect your session storage directory and mount
-it read/write into the container by default.  It will prefer project
-local session directories either in it's `WORKDIR` (i.e. a `$PWD` mount)
-or in the subdirectories of `WORKDIR` (i.e. a directory mount).  You can
-always override it's auto detection by setting
+it read/write into the container by default.  It will prefer a project
+local session directory either in its `WORKDIR` (i.e. a `$PWD` mount) or
+in a subdirectories of its `WORKDIR` (i.e. a directory mount).  You can
+always override the auto detection by setting
 [`PI_CODING_AGENT_SESSION_DIR`](https://pi.dev/docs/latest/settings#sessions)
 explicitly.
 
