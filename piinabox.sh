@@ -94,6 +94,11 @@ declare -A C=(
   # Host tmux configuration (always 'ro', no volume fallback).
   # Default: 'true', mount found tmux configuration read-only.
   [use_tmux_configuration]='true'
+
+  # Project local environment file.  Use environment specified in
+  # the containers $PWD/.pi/piinabox/${C[name]}env.
+  # Default: 'false'
+  [unsafe_project_env]='false'
 )
 
 # XDG base directories reminder
@@ -116,6 +121,43 @@ declare -a PI_CODING_AGENT_SESSION_DIR_CANDIDATES=(
   "${XDG_DATA_HOME}/pi/agent/sessions"
   "${PI_CODING_AGENT_DIR_CANDIDATES[@]/%//sessions}"
 )
+
+# list of plausible piinabox environment files
+declare -a PIINABOX_ENVFILE_CANDIDATES=(
+  "${XDG_CONFIG_HOME}/piinabox/${C[name]}env"
+)
+
+[[ "${C[unsafe_project_env]}" = 'true' ]] ||
+  [[ "${PIINABOX_UNSAFE_PROJECT_ENV}" = 'true' ]] &&
+    PIINABOX_ENVFILE_CANDIDATES+=( ".pi/piinabox/${C[name]}env" )
+
+[[ -r "${PIINABOX_ENVFILE}" ]] &&
+  PIINABOX_ENVFILE_CANDIDATES+=( "${PIINABOX_ENVFILE}" )
+
+envfiles() {
+  # $*: files with some KEY=VALUE declarations.  Export all "environment
+  # like" declarations into the environment.
+
+  local ARGV VALUE i; declare -a ENV
+
+  for ARGV in "${@}"; do
+    [[ -r "${ARGV}" ]] || continue
+    mapfile -t ENV <"${ARGV}" || continue
+    for i in "${!ENV[@]}"; do
+      [[ ${ENV[i]} =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] || {
+        unset 'ENV[i]'; continue; }
+
+      VALUE="${ENV[i]#*=}"; case "${VALUE}" in
+        \'*\'|\"*\") ENV[i]="${ENV[i]%%=*}=${VALUE:1:-1}" ;;
+      esac
+    done; ENV=( "${ENV[@]}" )
+
+    (( ${#ENV[@]} )) && export "${ENV[@]}"
+  done
+}
+
+# setup the environment from the env files early
+envfiles "${PIINABOX_ENVFILE_CANDIDATES[@]}"
 
 vspec() {
   # $*: VSPEC associative arrays.  Print the "default" fields of each VSPEC
@@ -212,7 +254,7 @@ else
 fi
 
 
-PMARGS_VOLUMES=(
+declare -a PMARGS_VOLUMES=(
   # static volumes, runtime data.  nothing for pi yet
   #'--volume' "${C[name]}-something:/something"
 )
@@ -314,6 +356,22 @@ declare -a PMARGS_PIENV; while read -r PIENV; do
   PMARGS_PIENV+=( '--env' "${PIENV}" )
 done < <(compgen -e 'PI_')
 
+# pass additional user supplied arguments to the container runtime
+declare -a PMARGS_EXTRA
+if [[ -n "${PIINABOX_RUNTIME_EXTRAARGS}" ]]; then
+  # xargs(1) as shell-like tokeniser without invoking a shell
+  mapfile -d '' -t PMARGS_EXTRA < <(
+    xargs -r printf '%s\0' <<<"${PIINABOX_RUNTIME_EXTRAARGS}"
+  )
+
+  # minimal shell like expansion for comfort
+  for i in "${!PMARGS_EXTRA[@]}"; do
+    PMARGS_EXTRA[i]="${PMARGS_EXTRA[i]//\$\{HOME\}/${HOME}}"
+    PMARGS_EXTRA[i]="${PMARGS_EXTRA[i]//\$HOME/${HOME}}"
+    PMARGS_EXTRA[i]="${PMARGS_EXTRA[i]/#\~\//${HOME}/}"
+  done
+fi
+
 PMARGV=(
   '--name' "${C[name]}-${SRANDOM}"
   '--interactive' '--tty' '--rm'
@@ -321,6 +379,7 @@ PMARGV=(
   ${PMARGS_PIENV:+"${PMARGS_PIENV[@]}"}
   ${PMARGS_VOLUMES:+"${PMARGS_VOLUMES[@]}"}
   ${PMARGS_PRJVOLUMES:+"${PMARGS_PRJVOLUMES[@]}"}
+  ${PMARGS_EXTRA:+"${PMARGS_EXTRA[@]}"}
 )
 
 #echo '# debug:' "${C[crt]}" run "${PMARGV[@]}" pi "${@}" >&2

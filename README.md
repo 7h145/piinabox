@@ -170,6 +170,27 @@ some legitimate workflows.  [I maintain a set of skills to alleviate
 these kinds of problems](https://github.com/7h145/boxed-skills), which
 might be useful directly or as examples.
 
+### Environment and extra runtime arguments
+
+`piinabox.sh` reads environment settings from
+`$XDG_CONFIG_HOME/piinabox/piinaboxenv`, if present.  An additional file
+can be selected with `PIINABOX_ENVFILE`.  Files contain simple
+`KEY=VALUE` declarations, one per line; values may optionally be enclosed
+in single or double quotes.  They are not shell scripts and no shell
+expansion is performed.
+
+`PIINABOX_RUNTIME_EXTRAARGS` provides an escape hatch for additional
+container runtime arguments, for example:
+
+    PIINABOX_RUNTIME_EXTRAARGS='--volume ~/.local/share/okf-engram:/root/.local/share/okf-engram'
+
+Arguments are tokenized shell-like but without invoking a shell.
+`$HOME`, `${HOME}`, and leading `~/` are expanded for convenience.
+
+A project-local `.pi/piinabox/piinaboxenv` is deliberately not read by
+default: runtime arguments can grant the container additional access to
+the host.  Set `PIINABOX_UNSAFE_PROJECT_ENV=true` to enable it.
+
 ## The Container Runtime
 
 This thing is developed with [rootless](https://rootlesscontaine.rs/)
