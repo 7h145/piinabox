@@ -47,6 +47,7 @@ RUN true \
     lsof \
     netcat-openbsd \
     openssh-client \
+    pulseaudio-utils \
     rsync \
     socat \
     strace \
